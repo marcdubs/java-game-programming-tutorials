@@ -39,4 +39,8 @@ public abstract class GUIButton implements GameObject
 		return Integer.MAX_VALUE;
 	}
 
+	public Rectangle getRectangle() {
+		return rect;
+	}
+
 }

@@ -1,14 +1,18 @@
 public class Player implements GameObject
 {
 	private Rectangle playerRectangle;
+	private Rectangle collisionCheckRectangle;
 	private int speed = 10;
 
 	//0 = Right, 1 = Left, 2 = Up, 3 = Down
 	private int direction = 0;
+	private int layer = 0;
 	private Sprite sprite;
 	private AnimatedSprite animatedSprite = null;
+	private final int xCollisionOffset = 14;
+	private final int yCollisionOffset = 20;
 
-	public Player(Sprite sprite)
+	public Player(Sprite sprite, int xZoom, int yZoom)
 	{
 		this.sprite = sprite;
 
@@ -16,8 +20,9 @@ public class Player implements GameObject
 			animatedSprite = (AnimatedSprite) sprite;
 
 		updateDirection();
-		playerRectangle = new Rectangle(32, 16, 16, 32);
+		playerRectangle = new Rectangle(-90, 0, 20, 26);
 		playerRectangle.generateGraphics(3, 0xFF00FF90);
+		collisionCheckRectangle = new Rectangle(0, 0, 10*xZoom, 15*yZoom);
 	}
 
 	private void updateDirection()
@@ -37,6 +42,7 @@ public class Player implements GameObject
 			renderer.renderSprite(sprite, playerRectangle.x, playerRectangle.y, xZoom, yZoom, false);
 		else
 			renderer.renderRectangle(playerRectangle, xZoom, yZoom, false);
+
 	}
 
 	//Call at 60 fps rate.
@@ -47,21 +53,24 @@ public class Player implements GameObject
 		boolean didMove = false;
 		int newDirection = direction;
 
+		collisionCheckRectangle.x = playerRectangle.x;
+		collisionCheckRectangle.y = playerRectangle.y;
+
 		if(keyListener.left())
 		{
 			newDirection = 1;
 			didMove = true;
-			playerRectangle.x -= speed;
+			collisionCheckRectangle.x -= speed;
 		}
 		if(keyListener.right())
 		{
 			newDirection = 0;
 			didMove = true;
-			playerRectangle.x += speed;
+			collisionCheckRectangle.x += speed;
 		}
 		if(keyListener.up()) 
 		{
-			playerRectangle.y -= speed;
+			collisionCheckRectangle.y -= speed;
 			didMove = true;
 			newDirection = 2;	
 		}
@@ -69,7 +78,7 @@ public class Player implements GameObject
 		{
 			newDirection = 3;
 			didMove = true;
-			playerRectangle.y += speed;
+			collisionCheckRectangle.y += speed;
 		}
 
 		if(newDirection != direction) 
@@ -78,14 +87,42 @@ public class Player implements GameObject
 			updateDirection();
 		}
 
+
 		if(!didMove) {
 			animatedSprite.reset();
 		}
 
-		updateCamera(game.getRenderer().getCamera());
+		if(didMove) {
 
-		if(didMove)
+
+			collisionCheckRectangle.x += xCollisionOffset;
+			collisionCheckRectangle.y += yCollisionOffset;
+
+			Rectangle axisCheck = new Rectangle(collisionCheckRectangle.x, playerRectangle.y + yCollisionOffset, collisionCheckRectangle.w, collisionCheckRectangle.h);
+
+			//Check the X axis
+			if(!game.getMap().checkCollision(axisCheck, layer, game.getXZoom(), game.getYZoom()) && 
+				!game.getMap().checkCollision(axisCheck, layer + 1, game.getXZoom(), game.getYZoom())) {
+				playerRectangle.x = collisionCheckRectangle.x - xCollisionOffset;
+			}
+
+			axisCheck.x = playerRectangle.x + xCollisionOffset;
+			axisCheck.y = collisionCheckRectangle.y;
+			axisCheck.w = collisionCheckRectangle.w;
+			axisCheck.h = collisionCheckRectangle.h;
+			//axisCheck = new Rectangle(playerRectangle.x, collisionCheckRectangle.y, collisionCheckRectangle.w, collisionCheckRectangle.h);
+
+			//Check the Y axis
+			if(!game.getMap().checkCollision(axisCheck, layer, game.getXZoom(), game.getYZoom()) && 
+				!game.getMap().checkCollision(axisCheck, layer + 1, game.getXZoom(), game.getYZoom())) {
+				playerRectangle.y = collisionCheckRectangle.y - yCollisionOffset;
+			}
+
+
 			animatedSprite.update(game);
+		}
+
+		updateCamera(game.getRenderer().getCamera());
 	}
 
 	public void updateCamera(Rectangle camera) {
@@ -94,7 +131,11 @@ public class Player implements GameObject
 	}
 
 	public int getLayer() {
-		return 0;
+		return layer;
+	}
+
+	public Rectangle getRectangle() {
+		return playerRectangle;
 	}
 
 	//Call whenever mouse is clicked on Canvas.

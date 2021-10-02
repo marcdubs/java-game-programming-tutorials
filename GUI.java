@@ -75,5 +75,9 @@ public class GUI implements GameObject
 		return Integer.MAX_VALUE;
 	}
 
+	public Rectangle getRectangle() {
+		return rect;
+	}
+
 
 }

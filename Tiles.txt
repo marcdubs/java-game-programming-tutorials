@@ -1,9 +1,12 @@
-//TileName-SpriteX-SpriteY
+//TileName-SpriteX-SpriteY-CollisionType
+//If there is no CollisionType argument, that tile has no collision
 Grass1-0-1
 Grass2-0-2
 Dirt-2-1
 PathVertical-1-1
 PathCorner-1-2
 PathHorizontal-2-2
-Water-4-3
-Water2-4-4
+Water-4-3-0
+Water2-4-4-0
+TreeTop-5-3
+TreeBottom-5-4-3

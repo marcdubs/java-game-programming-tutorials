@@ -97,4 +97,9 @@ public class AnimatedSprite extends Sprite implements GameObject
 		return -1;
 	}
 
+	public Rectangle getRectangle() {
+		System.out.println("Called getRectangle() of AnimatedSprite! This has no meaning here.");
+		return null;
+	}
+
 }

@@ -12,4 +12,6 @@ public interface GameObject
 	public boolean handleMouseClick(Rectangle mouseRectangle, Rectangle camera, int xZoom, int yZoom);
 
 	public int getLayer();
+
+	public Rectangle getRectangle();
 }
