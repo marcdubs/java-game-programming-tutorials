@@ -1,15 +1,29 @@
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.awt.Graphics;
+
 import java.lang.Runnable;
 import java.lang.Thread;
+
 import javax.swing.JFrame;
+
+import javax.imageio.ImageIO;
+
+import java.io.IOException;
 
 public class Game extends JFrame implements Runnable
 {
+
+	public static int alpha = 0xFFFF00DC;
+
 	private Canvas canvas = new Canvas();
 	private RenderHandler renderer;
+	private BufferedImage testImage;
+	private Sprite testSprite;
+	private SpriteSheet sheet;
+	private Rectangle testRectangle = new Rectangle(30, 30, 100, 100);
 
 	public Game() 
 	{
@@ -33,26 +47,58 @@ public class Game extends JFrame implements Runnable
 
 		renderer = new RenderHandler(getWidth(), getHeight());
 
+
+		BufferedImage sheetImage = loadImage("Tiles1.png");
+		sheet = new SpriteSheet(sheetImage);
+		sheet.loadSprites(16, 16);
+
+		testImage = loadImage("GrassTile.png");
+		testSprite = sheet.getSprite(4,1);
+
+		testRectangle.generateGraphics(2, 12234);
 	}
 
 	
-	public void update() {
+	public void update() 
+	{
 
 	}
 
 
-	public void render() {
+	private BufferedImage loadImage(String path)
+	{
+		try 
+		{
+			BufferedImage loadedImage = ImageIO.read(Game.class.getResource(path));
+			BufferedImage formattedImage = new BufferedImage(loadedImage.getWidth(), loadedImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+			formattedImage.getGraphics().drawImage(loadedImage, 0, 0, null);
+
+			return formattedImage;
+		}
+		catch(IOException exception) 
+		{
+			exception.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public void render() 
+	{
 			BufferStrategy bufferStrategy = canvas.getBufferStrategy();
 			Graphics graphics = bufferStrategy.getDrawGraphics();
 			super.paint(graphics);
 
+			renderer.renderSprite(testSprite, 0, 0, 5, 5);
+			renderer.renderRectangle(testRectangle, 1, 1);
 			renderer.render(graphics);
 
 			graphics.dispose();
 			bufferStrategy.show();
 	}
 
-	public void run() {
+	public void run() 
+	{
 		BufferStrategy bufferStrategy = canvas.getBufferStrategy();
 		int i = 0;
 		int x = 0;
@@ -61,7 +107,8 @@ public class Game extends JFrame implements Runnable
 		double nanoSecondConversion = 1000000000.0 / 60; //60 frames per second
 		double changeInSeconds = 0;
 
-		while(true) {
+		while(true) 
+		{
 			long now = System.nanoTime();
 
 			changeInSeconds += (now - lastTime) / nanoSecondConversion;
@@ -74,23 +121,6 @@ public class Game extends JFrame implements Runnable
 			lastTime = now;
 		}
 
-		//Bad loop
-		// while(true) {
-		// 	bufferStrategy = canvas.getBufferStrategy();
-		// 	Graphics graphics = bufferStrategy.getDrawGraphics();
-		// 	super.paint(graphics);
-
-		// 	//Painting the Backround
-		// 	graphics.setColor(Color.black);
-		// 	graphics.fillRect(0, 0, getWidth(), getHeight());
-
-		// 	//Painting the Oval
-		// 	graphics.setColor(Color.red);		
-		// 	graphics.fillOval(x, 200, 50, 100);
-
-		// 	graphics.dispose();
-		// 	bufferStrategy.show();
-		// }
 	}
 
 	public static void main(String[] args) 
