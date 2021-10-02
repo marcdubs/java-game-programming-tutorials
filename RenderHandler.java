@@ -38,6 +38,11 @@ public class RenderHandler
 		renderArray(sprite.getPixels(), sprite.getWidth(), sprite.getHeight(), xPosition, yPosition, xZoom, yZoom, fixed);
 	}
 
+	public void renderSprite(Sprite sprite, int xPosition, int yPosition, int renderWidth, int renderHeight, int xZoom, int yZoom, boolean fixed, int xOffset, int yOffset) {
+		renderArray(sprite.getPixels(), sprite.getWidth(), sprite.getHeight(), renderWidth, renderHeight, xPosition, yPosition, 
+					xZoom, yZoom, fixed, xOffset, yOffset);
+	}
+
 	public void renderRectangle(Rectangle rectangle, int xZoom, int yZoom, boolean fixed)
 	{
 		int[] rectanglePixels = rectangle.getPixels();
@@ -54,11 +59,38 @@ public class RenderHandler
 
 	public void renderArray(int[] renderPixels, int renderWidth, int renderHeight, int xPosition, int yPosition, int xZoom, int yZoom, boolean fixed) 
 	{
-		for(int y = 0; y < renderHeight; y++)
-			for(int x = 0; x < renderWidth; x++)
+		renderArray(renderPixels, renderWidth, renderHeight, renderWidth, renderHeight, xPosition, yPosition, 
+					xZoom, yZoom, fixed, 0, 0);
+		// for(int y = 0; y < renderHeight; y++)
+		// 	for(int x = 0; x < renderWidth; x++)
+		// 		for(int yZoomPosition = 0; yZoomPosition < yZoom; yZoomPosition++)
+		// 			for(int xZoomPosition = 0; xZoomPosition < xZoom; xZoomPosition++)
+		// 				setPixel(renderPixels[x + y * renderWidth], (x * xZoom) + xPosition + xZoomPosition, ((y * yZoom) + yPosition + yZoomPosition), fixed);
+	}
+
+	/*
+		renderPixels = pixels to render
+		imageWidth = width of entire image
+		imageHeight = height of entire image
+		renderWidth = width of image to render
+		renderHeight = height of image to render
+		xPosition = x position to render image
+		yPosition = y position to render image
+		xZoom = horizontal zoom
+		yZoom = vertical zoom
+		fixed = should offset by camera position
+		xOffset = offset into the full image to render x
+		yOffset = offset into the full image to render y
+		
+	*/
+	public void renderArray(int[] renderPixels, int imageWidth, int imageHeight, int renderWidth, int renderHeight, int xPosition, int yPosition, 
+							int xZoom, int yZoom, boolean fixed, int xOffset, int yOffset)
+	{
+		for(int y = yOffset; y < yOffset + renderHeight; y++)
+			for(int x = xOffset; x < xOffset + renderWidth; x++)
 				for(int yZoomPosition = 0; yZoomPosition < yZoom; yZoomPosition++)
 					for(int xZoomPosition = 0; xZoomPosition < xZoom; xZoomPosition++)
-						setPixel(renderPixels[x + y * renderWidth], (x * xZoom) + xPosition + xZoomPosition, ((y * yZoom) + yPosition + yZoomPosition), fixed);
+						setPixel(renderPixels[x + y * imageWidth], ((x - xOffset) * xZoom) + xPosition + xZoomPosition, (((y - yOffset) * yZoom) + yPosition + yZoomPosition), fixed);
 	}
 
 	private void setPixel(int pixel, int x, int y, boolean fixed) 

@@ -1,14 +1,19 @@
 public class Player implements GameObject
 {
 	private Rectangle playerRectangle;
-	private int speed = 10;
+	private int speed = 15;
+	private int jumpSpeed = 40;
 
 	//0 = Right, 1 = Left, 2 = Up, 3 = Down
 	private int direction = 0;
 	private Sprite sprite;
 	private AnimatedSprite animatedSprite = null;
 
-	public Player(Sprite sprite)
+	private Vector2 velocity = new Vector2();
+	private float gravityAcceleration = 1.5f;
+	private float acceleration = 10.0f;
+
+	public Player(Sprite sprite, int xZoom, int yZoom)
 	{
 		this.sprite = sprite;
 
@@ -16,7 +21,7 @@ public class Player implements GameObject
 			animatedSprite = (AnimatedSprite) sprite;
 
 		updateDirection();
-		playerRectangle = new Rectangle(32, 16, 16, 32);
+		playerRectangle = new Rectangle(32, 16, 20*xZoom, 26*yZoom);
 		playerRectangle.generateGraphics(3, 0xFF00FF90);
 	}
 
@@ -42,34 +47,46 @@ public class Player implements GameObject
 	//Call at 60 fps rate.
 	public void update(Game game)
 	{
+		int yMin = game.getRenderer().getCamera().h - playerRectangle.h;
+
+		if(playerRectangle.y < yMin)
+		{
+			velocity.y += gravityAcceleration;
+		} else {
+			velocity.y = 0;
+			playerRectangle.y = yMin;
+			velocity.x = 0;
+		}
+
 		KeyBoardListener keyListener = game.getKeyListener();
 
 		boolean didMove = false;
 		int newDirection = direction;
 
+		boolean onGround = playerRectangle.y == yMin;
+		
 		if(keyListener.left())
 		{
 			newDirection = 1;
 			didMove = true;
-			playerRectangle.x -= speed;
+			velocity.x = -acceleration;
 		}
 		if(keyListener.right())
 		{
 			newDirection = 0;
 			didMove = true;
-			playerRectangle.x += speed;
+			velocity.x = acceleration;
 		}
 		if(keyListener.up()) 
 		{
-			playerRectangle.y -= speed;
-			didMove = true;
-			newDirection = 2;	
+			if(onGround)
+				velocity.y -= jumpSpeed;
 		}
 		if(keyListener.down()) 
 		{
-			newDirection = 3;
-			didMove = true;
-			playerRectangle.y += speed;
+			//newDirection = 3;
+			//didMove = true;
+			//playerRectangle.y += speed;
 		}
 
 		if(newDirection != direction) 
@@ -82,15 +99,25 @@ public class Player implements GameObject
 			animatedSprite.reset();
 		}
 
-		updateCamera(game.getRenderer().getCamera());
+		updateCamera(game.getMap(), game.getRenderer().getCamera());
 
 		if(didMove)
 			animatedSprite.update(game);
+
+		playerRectangle.x += velocity.x;
+		playerRectangle.y += velocity.y;
 	}
 
-	public void updateCamera(Rectangle camera) {
-		camera.x = playerRectangle.x - (camera.w / 2);
-		camera.y = playerRectangle.y - (camera.h / 2);
+	public void updateCamera(Map map, Rectangle camera) {
+		int x = playerRectangle.x - (camera.w / 2);
+		if(x < 0)
+			x = 0;
+
+		if(x + camera.w > map.getMaxX())
+			x = map.getMaxX() - camera.w;
+
+		camera.x = x;
+		// camera.y = playerRectangle.y - (camera.h / 2);
 	}
 
 	//Call whenever mouse is clicked on Canvas.

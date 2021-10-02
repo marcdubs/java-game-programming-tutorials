@@ -8,19 +8,18 @@ import java.util.HashMap;
 
 public class Map
 {
-	private Sprite background;
 	private Tiles tileSet;
-	private File mapFile;
+	private int fillTileID = -1;
 
 	private ArrayList<MappedTile> mappedTiles = new ArrayList<MappedTile>();
 	private HashMap<Integer, String> comments = new HashMap<Integer, String>();
 
+	private File mapFile;
 
-	public Map(Sprite background, Tiles tileSet, File mapFile)
+	public Map(File mapFile, Tiles tileSet)
 	{
-		this.background = background;
-		this.tileSet = tileSet;
 		this.mapFile = mapFile;
+		this.tileSet = tileSet;
 		try 
 		{
 			Scanner scanner = new Scanner(mapFile);
@@ -30,6 +29,16 @@ public class Map
 				String line = scanner.nextLine();
 				if(!line.startsWith("//"))
 				{
+					if(line.contains(":")) 
+					{
+						String[] splitString = line.split(":");
+						if(splitString[0].equalsIgnoreCase("Fill"))
+						{
+							fillTileID = Integer.parseInt(splitString[1]);
+							continue;
+						}
+					}
+
 
 					String[] splitString = line.split(",");
 					if(splitString.length >= 3)
@@ -51,8 +60,35 @@ public class Map
 		{
 			e.printStackTrace();
 		}
+	}
 
+	public void setTile(int tileX, int tileY, int tileID)
+	{
+		boolean foundTile = false;
 
+		for(int i = 0; i < mappedTiles.size(); i++)
+		{
+			MappedTile mappedTile = mappedTiles.get(i);
+			if(mappedTile.x == tileX && mappedTile.y == tileY) {
+				mappedTile.id = tileID;
+				foundTile = true;
+				break;
+			}
+		}
+
+		if(!foundTile)
+			mappedTiles.add(new MappedTile(tileID, tileX, tileY));
+	}
+
+	public void removeTile(int tileX, int tileY)
+	{
+		for(int i = 0; i < mappedTiles.size(); i++)
+		{
+			MappedTile mappedTile = mappedTiles.get(i);
+			if(mappedTile.x == tileX && mappedTile.y == tileY) {
+				mappedTiles.remove(i);
+			}
+		}
 	}
 
 	public void saveMap()
@@ -65,6 +101,15 @@ public class Map
 			mapFile.createNewFile();
 
 			PrintWriter printWriter = new PrintWriter(mapFile);
+
+			if(fillTileID >= 0) {
+				if(comments.containsKey(currentLine)) 
+				{
+					printWriter.println(comments.get(currentLine));
+					currentLine++;
+				}
+				printWriter.println("Fill:" + fillTileID);
+			}
 
 			for(int i = 0; i < mappedTiles.size(); i++) {
 				if(comments.containsKey(currentLine))
@@ -83,45 +128,29 @@ public class Map
 		}
 	}
 
-	public void update(Game game)
-	{
-
-	}
-
 	public void render(RenderHandler renderer, int xZoom, int yZoom)
 	{
-		Rectangle camera = renderer.getCamera();
-		renderer.renderSprite(background, 0, 0, camera.w, camera.h, 1, 1, true, camera.x, camera.y);
+		int tileWidth = 16 * xZoom;
+		int tileHeight = 16 * yZoom;
+
+		if(fillTileID >= 0)
+		{
+			Rectangle camera = renderer.getCamera();
+
+			for(int y = camera.y - tileHeight - (camera.y % tileHeight); y < camera.y + camera.h; y+= tileHeight)
+			{
+				for(int x = camera.x - tileWidth - (camera.x % tileWidth); x < camera.x + camera.w; x+= tileWidth)
+				{
+					tileSet.renderTile(fillTileID, renderer, x, y, xZoom, yZoom);
+				}
+			}
+		}
+
 		for(int tileIndex = 0; tileIndex < mappedTiles.size(); tileIndex++)
 		{
 			MappedTile mappedTile = mappedTiles.get(tileIndex);
-			tileSet.renderTile(mappedTile.id, renderer, mappedTile.x, mappedTile.y, xZoom, yZoom);
-		}	
-	}
-
-	public void setTile(int tileX, int tileY, int tileID)
-	{
-		mappedTiles.add(new MappedTile(tileID, tileX, tileY));
-	}
-
-	public void removeTile(int tileX, int tileY, int xZoom, int yZoom)
-	{
-		for(int i = mappedTiles.size() - 1; i >= 0; i--)
-		{
-			MappedTile mappedTile = mappedTiles.get(i);
-			Sprite sprite = tileSet.getSprite(mappedTile.id);
-			Rectangle mappedTileRect = new Rectangle(mappedTile.x, mappedTile.y, sprite.getWidth() * xZoom, sprite.getHeight() * yZoom);
-			Rectangle mouse = new Rectangle(tileX, tileY, 1, 1);
-			if(mouse.intersects(mappedTileRect)) {
-				mappedTiles.remove(i);
-				break;
-			}
+			tileSet.renderTile(mappedTile.id, renderer, mappedTile.x * tileWidth, mappedTile.y * tileHeight, xZoom, yZoom);
 		}
-	}
-
-	public int getMaxX()
-	{
-		return background.getWidth();
 	}
 
 	//Tile ID in the tileSet and the position of the tile in the map

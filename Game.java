@@ -26,7 +26,7 @@ public class Game extends JFrame implements Runnable
 	private SpriteSheet sheet;
 	private SpriteSheet playerSheet;
 
-	private int selectedTileID = 2;
+	private int selectedTileID = 0;
 
 	private Rectangle testRectangle = new Rectangle(30, 30, 100, 100);
 
@@ -53,8 +53,11 @@ public class Game extends JFrame implements Runnable
 		//Put our frame in the center of the screen.
 		setLocationRelativeTo(null);
 
+		canvas.setBounds(0, 0, 1000, 800);
+
 		//Add our graphics compoent
 		add(canvas);
+		pack();
 
 		//Make our frame visible.
 		setVisible(true);
@@ -62,7 +65,7 @@ public class Game extends JFrame implements Runnable
 		//Create our object for buffer strategy.
 		canvas.createBufferStrategy(3);
 
-		renderer = new RenderHandler(getWidth(), getHeight());
+		renderer = new RenderHandler(canvas.getWidth(), canvas.getHeight());
 
 		//Load Assets
 		BufferedImage sheetImage = loadImage("Tiles1.png");
@@ -77,10 +80,11 @@ public class Game extends JFrame implements Runnable
 		AnimatedSprite playerAnimations = new AnimatedSprite(playerSheet, 5);
 
 		//Load Tiles
-		tiles = new Tiles(new File("Tiles.txt"),sheet);
+		tiles = new Tiles(this, new File("Tiles.txt"));
 
 		//Load Map
-		map = new Map(new File("Map.txt"), tiles);
+		//map = new Map(new File("Map.txt"), tiles);
+		map = new Map(new Sprite(loadImage("Background.png")), tiles, new File("Map.txt"));
 
 		//testImage = loadImage("GrassTile.png");
 		//testSprite = sheet.getSprite(4,1);
@@ -102,7 +106,7 @@ public class Game extends JFrame implements Runnable
 
 		//Load Objects
 		objects = new GameObject[2];
-		player = new Player(playerAnimations);
+		player = new Player(playerAnimations, xZoom, yZoom);
 		objects[0] = player;
 		objects[1] = gui;
 
@@ -121,7 +125,7 @@ public class Game extends JFrame implements Runnable
 	}
 
 
-	private BufferedImage loadImage(String path)
+	public BufferedImage loadImage(String path)
 	{
 		try 
 		{
@@ -156,17 +160,17 @@ public class Game extends JFrame implements Runnable
 
 		if(!stoppedChecking) 
 		{
-			x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
-			y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+			x = (int) Math.floor((x + renderer.getCamera().x));
+			y = (int) Math.floor((y + renderer.getCamera().y));
 			map.setTile(x, y, selectedTileID);
 		}
 	}
 
 	public void rightClick(int x, int y)
 	{
-		x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
-		y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
-		map.removeTile(x, y);
+		x = (int) Math.floor((x + renderer.getCamera().x));
+		y = (int) Math.floor((y + renderer.getCamera().y));
+		map.removeTile(x, y, xZoom, yZoom);
 	}
 
 
@@ -244,5 +248,10 @@ public class Game extends JFrame implements Runnable
 	public RenderHandler getRenderer()
 	{
 		return renderer;
+	}
+
+	public Map getMap()
+	{
+		return map;
 	}
 }
