@@ -24,6 +24,17 @@ public class Rectangle
 				pixels[x + y * w] = color;
 	}
 
+	public boolean intersects(Rectangle otherRectangle)
+	{
+		if(x > otherRectangle.x + otherRectangle.w || otherRectangle.x > x + w)
+			return false;
+
+		if(y > otherRectangle.y + otherRectangle.h || otherRectangle.y > y + h)
+			return false;
+
+		return true;
+	}
+
 	public void generateGraphics(int borderWidth, int color) {
 		pixels = new int[w*h];
 		
@@ -56,5 +67,10 @@ public class Rectangle
 			System.out.println("Attempted to retrive pixels from a Rectangle without generated graphics.");
 
 		return null;
+	}
+
+	public String toString()
+	{
+		return "[" + x + ", " + y + ", " + w + ", " + h + "]";
 	}
 }

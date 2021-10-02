@@ -24,6 +24,9 @@ public class Game extends JFrame implements Runnable
 	private RenderHandler renderer;
 
 	private SpriteSheet sheet;
+	private SpriteSheet playerSheet;
+
+	private int selectedTileID = 2;
 
 	private Rectangle testRectangle = new Rectangle(30, 30, 100, 100);
 
@@ -66,6 +69,13 @@ public class Game extends JFrame implements Runnable
 		sheet = new SpriteSheet(sheetImage);
 		sheet.loadSprites(16, 16);
 
+		BufferedImage playerSheetImage = loadImage("Player.png");
+		playerSheet = new SpriteSheet(playerSheetImage);
+		playerSheet.loadSprites(20, 26);
+
+		//Player Animated Sprites
+		AnimatedSprite playerAnimations = new AnimatedSprite(playerSheet, 5);
+
 		//Load Tiles
 		tiles = new Tiles(new File("Tiles.txt"),sheet);
 
@@ -77,11 +87,24 @@ public class Game extends JFrame implements Runnable
 
 		testRectangle.generateGraphics(2, 12234);
 
+		//Load SDK GUI
+		GUIButton[] buttons = new GUIButton[tiles.size()];
+		Sprite[] tileSprites = tiles.getSprites();
+
+		for(int i = 0; i < buttons.length; i++)
+		{
+			Rectangle tileRectangle = new Rectangle(0, i*(16*xZoom + 2), 16*xZoom, 16*yZoom);
+
+			buttons[i] = new SDKButton(this, i, tileSprites[i], tileRectangle);
+		}
+
+		GUI gui = new GUI(buttons, 5, 5, true);
 
 		//Load Objects
-		objects = new GameObject[1];
-		player = new Player();
+		objects = new GameObject[2];
+		player = new Player(playerAnimations);
 		objects[0] = player;
+		objects[1] = gui;
 
 		//Add Listeners
 		canvas.addKeyListener(keyListener);
@@ -123,9 +146,20 @@ public class Game extends JFrame implements Runnable
 
 	public void leftClick(int x, int y)
 	{
-		x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
-		y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
-		map.setTile(x, y, 2);
+
+		Rectangle mouseRectangle = new Rectangle(x, y, 1, 1);
+		boolean stoppedChecking = false;
+
+		for(int i = 0; i < objects.length; i++)
+			if(!stoppedChecking)
+				stoppedChecking = objects[i].handleMouseClick(mouseRectangle, renderer.getCamera(), xZoom, yZoom);
+
+		if(!stoppedChecking) 
+		{
+			x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
+			y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+			map.setTile(x, y, selectedTileID);
+		}
 	}
 
 	public void rightClick(int x, int y)
@@ -152,6 +186,16 @@ public class Game extends JFrame implements Runnable
 			graphics.dispose();
 			bufferStrategy.show();
 			renderer.clear();
+	}
+
+	public void changeTile(int tileID) 
+	{
+		selectedTileID = tileID;
+	}
+
+	public int getSelectedTile()
+	{
+		return selectedTileID;
 	}
 
 	public void run() 

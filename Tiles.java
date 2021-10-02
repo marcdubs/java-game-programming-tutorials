@@ -39,12 +39,27 @@ public class Tiles
 	{
 		if(tileID >= 0 && tilesList.size() > tileID)
 		{
-			renderer.renderSprite(tilesList.get(tileID).sprite, xPosition, yPosition, xZoom, yZoom);
+			renderer.renderSprite(tilesList.get(tileID).sprite, xPosition, yPosition, xZoom, yZoom, false);
 		}
 		else
 		{
 			System.out.println("TileID " + tileID + " is not within range " + tilesList.size() + ".");
 		}
+	}
+
+	public int size()
+	{
+		return tilesList.size();
+	}
+
+	public Sprite[] getSprites()
+	{
+		Sprite[] sprites = new Sprite[size()];
+
+		for(int i = 0; i < sprites.length; i++)
+			sprites[i] = tilesList.get(i).sprite;
+
+		return sprites;
 	}
 
 	class Tile 
