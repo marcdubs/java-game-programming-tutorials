@@ -9,7 +9,7 @@ public class Tiles
 	private ArrayList<Tile> tilesList = new ArrayList<Tile>();
 
 	//This will only work assuming the sprites in the spriteSheet have been loaded.
-	public Tiles(Game game, File tilesFile)
+	public Tiles(File tilesFile, SpriteSheet spriteSheet)
 	{
 		this.spriteSheet = spriteSheet;
 		try 
@@ -22,10 +22,9 @@ public class Tiles
 				{
 					String[] splitString = line.split("-");
 					String tileName = splitString[0];
-					Tile tile = new Tile(tileName, new Sprite(game.loadImage("Sprites/" + splitString[1])));
-					if(splitString.length > 2)
-						tile.type = splitString[2];
-					
+					int spriteX = Integer.parseInt(splitString[1]);
+					int spriteY = Integer.parseInt(splitString[2]);
+					Tile tile = new Tile(tileName, spriteSheet.getSprite(spriteX, spriteY));
 					tilesList.add(tile);
 				}
 			}
@@ -63,28 +62,10 @@ public class Tiles
 		return sprites;
 	}
 
-	public Sprite getSprite(int tileID)
-	{
-		if(tileID >= 0 && tileID < size())
-			return tilesList.get(tileID).sprite;
-
-		return null;
-	}
-
-	public String getType(int tileID)
-	{
-		if(tileID >= 0 && tileID < size())
-			return tilesList.get(tileID).type;
-
-		return null;
-	}
-
-
 	class Tile 
 	{
 		public String tileName;
 		public Sprite sprite;
-		public String type = "normal";
 
 		public Tile(String tileName, Sprite sprite) 
 		{

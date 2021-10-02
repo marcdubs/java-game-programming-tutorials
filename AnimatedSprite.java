@@ -92,4 +92,9 @@ public class AnimatedSprite extends Sprite implements GameObject
 			currentSprite = startSprite;
 	}
 
+	public int getLayer() {
+		System.out.println("Called getLayer() of AnimatedSprite! This has no meaning here.");
+		return -1;
+	}
+
 }

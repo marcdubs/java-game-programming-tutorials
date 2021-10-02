@@ -71,5 +71,9 @@ public class GUI implements GameObject
 		return stopChecking;
 	}
 
+	public int getLayer() {
+		return Integer.MAX_VALUE;
+	}
+
 
 }

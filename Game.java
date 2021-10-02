@@ -1,5 +1,7 @@
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
@@ -26,7 +28,8 @@ public class Game extends JFrame implements Runnable
 	private SpriteSheet sheet;
 	private SpriteSheet playerSheet;
 
-	private int selectedTileID = 0;
+	private int selectedTileID = 2;
+	private int selectedLayer = 1;
 
 	private Rectangle testRectangle = new Rectangle(30, 30, 100, 100);
 
@@ -53,11 +56,8 @@ public class Game extends JFrame implements Runnable
 		//Put our frame in the center of the screen.
 		setLocationRelativeTo(null);
 
-		canvas.setBounds(0, 0, 1000, 800);
-
 		//Add our graphics compoent
 		add(canvas);
-		pack();
 
 		//Make our frame visible.
 		setVisible(true);
@@ -65,7 +65,7 @@ public class Game extends JFrame implements Runnable
 		//Create our object for buffer strategy.
 		canvas.createBufferStrategy(3);
 
-		renderer = new RenderHandler(canvas.getWidth(), canvas.getHeight());
+		renderer = new RenderHandler(getWidth(), getHeight());
 
 		//Load Assets
 		BufferedImage sheetImage = loadImage("Tiles1.png");
@@ -80,11 +80,10 @@ public class Game extends JFrame implements Runnable
 		AnimatedSprite playerAnimations = new AnimatedSprite(playerSheet, 5);
 
 		//Load Tiles
-		tiles = new Tiles(this, new File("Tiles.txt"));
+		tiles = new Tiles(new File("Tiles.txt"),sheet);
 
 		//Load Map
-		//map = new Map(new File("Map.txt"), tiles);
-		map = new Map(new Sprite(loadImage("Background.png")), tiles, new File("Map.txt"));
+		map = new Map(new File("Map.txt"), tiles);
 
 		//testImage = loadImage("GrassTile.png");
 		//testSprite = sheet.getSprite(4,1);
@@ -106,7 +105,7 @@ public class Game extends JFrame implements Runnable
 
 		//Load Objects
 		objects = new GameObject[2];
-		player = new Player(playerAnimations, xZoom, yZoom);
+		player = new Player(playerAnimations);
 		objects[0] = player;
 		objects[1] = gui;
 
@@ -115,6 +114,29 @@ public class Game extends JFrame implements Runnable
 		canvas.addFocusListener(keyListener);
 		canvas.addMouseListener(mouseListener);
 		canvas.addMouseMotionListener(mouseListener);
+
+		addComponentListener(new ComponentListener() {
+			public void componentResized(ComponentEvent e) {
+				int newWidth = canvas.getWidth();
+				int newHeight = canvas.getHeight();
+
+				if(newWidth > renderer.getMaxWidth())
+					newWidth = renderer.getMaxWidth();
+
+				if(newHeight > renderer.getMaxHeight())
+					newHeight = renderer.getMaxHeight();
+
+				renderer.getCamera().w = newWidth;
+				renderer.getCamera().h = newHeight;
+				canvas.setSize(newWidth, newHeight);
+				pack();
+			}
+
+			public void componentHidden(ComponentEvent e) {}
+			public void componentMoved(ComponentEvent e) {}
+			public void componentShown(ComponentEvent e) {}
+		});
+		canvas.requestFocus();
 	}
 
 	
@@ -125,7 +147,7 @@ public class Game extends JFrame implements Runnable
 	}
 
 
-	public BufferedImage loadImage(String path)
+	private BufferedImage loadImage(String path)
 	{
 		try 
 		{
@@ -160,17 +182,17 @@ public class Game extends JFrame implements Runnable
 
 		if(!stoppedChecking) 
 		{
-			x = (int) Math.floor((x + renderer.getCamera().x));
-			y = (int) Math.floor((y + renderer.getCamera().y));
-			map.setTile(x, y, selectedTileID);
+			x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
+			y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+			map.setTile(selectedLayer, x, y, selectedTileID);
 		}
 	}
 
 	public void rightClick(int x, int y)
 	{
-		x = (int) Math.floor((x + renderer.getCamera().x));
-		y = (int) Math.floor((y + renderer.getCamera().y));
-		map.removeTile(x, y, xZoom, yZoom);
+		x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
+		y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+		map.removeTile(selectedLayer, x, y);
 	}
 
 
@@ -180,10 +202,10 @@ public class Game extends JFrame implements Runnable
 			Graphics graphics = bufferStrategy.getDrawGraphics();
 			super.paint(graphics);
 
-			map.render(renderer, xZoom, yZoom);
+			map.render(renderer, objects, xZoom, yZoom);
 
-			for(int i = 0; i < objects.length; i++) 
-				objects[i].render(renderer, xZoom, yZoom);
+			// for(int i = 0; i < objects.length; i++) 
+			// 	objects[i].render(renderer, xZoom, yZoom);
 
 			renderer.render(graphics);
 
@@ -248,10 +270,5 @@ public class Game extends JFrame implements Runnable
 	public RenderHandler getRenderer()
 	{
 		return renderer;
-	}
-
-	public Map getMap()
-	{
-		return map;
 	}
 }
