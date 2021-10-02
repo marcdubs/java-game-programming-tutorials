@@ -1,0 +1,7 @@
+//TileName-SpriteX-SpriteY
+Grass1-0-1
+Grass2-0-2
+Dirt-2-1
+PathVertical-1-1
+PathCorner-1-2
+PathHorizontal-2-2

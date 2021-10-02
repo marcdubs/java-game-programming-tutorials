@@ -1,5 +1,6 @@
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics;
@@ -12,6 +13,7 @@ import javax.swing.JFrame;
 import javax.imageio.ImageIO;
 
 import java.io.IOException;
+import java.io.File;
 
 public class Game extends JFrame implements Runnable
 {
@@ -20,10 +22,22 @@ public class Game extends JFrame implements Runnable
 
 	private Canvas canvas = new Canvas();
 	private RenderHandler renderer;
-	private BufferedImage testImage;
-	private Sprite testSprite;
+
 	private SpriteSheet sheet;
+
 	private Rectangle testRectangle = new Rectangle(30, 30, 100, 100);
+
+	private Tiles tiles;
+	private Map map;
+
+	private GameObject[] objects;
+	private KeyBoardListener keyListener = new KeyBoardListener(this);
+	private MouseEventListener mouseListener = new MouseEventListener(this);
+
+	private Player player;
+
+	private int xZoom = 3;
+	private int yZoom = 3;
 
 	public Game() 
 	{
@@ -47,21 +61,40 @@ public class Game extends JFrame implements Runnable
 
 		renderer = new RenderHandler(getWidth(), getHeight());
 
-
+		//Load Assets
 		BufferedImage sheetImage = loadImage("Tiles1.png");
 		sheet = new SpriteSheet(sheetImage);
 		sheet.loadSprites(16, 16);
 
-		testImage = loadImage("GrassTile.png");
-		testSprite = sheet.getSprite(4,1);
+		//Load Tiles
+		tiles = new Tiles(new File("Tiles.txt"),sheet);
+
+		//Load Map
+		map = new Map(new File("Map.txt"), tiles);
+
+		//testImage = loadImage("GrassTile.png");
+		//testSprite = sheet.getSprite(4,1);
 
 		testRectangle.generateGraphics(2, 12234);
+
+
+		//Load Objects
+		objects = new GameObject[1];
+		player = new Player();
+		objects[0] = player;
+
+		//Add Listeners
+		canvas.addKeyListener(keyListener);
+		canvas.addFocusListener(keyListener);
+		canvas.addMouseListener(mouseListener);
+		canvas.addMouseMotionListener(mouseListener);
 	}
 
 	
 	public void update() 
 	{
-
+		for(int i = 0; i < objects.length; i++) 
+			objects[i].update(this);
 	}
 
 
@@ -82,6 +115,26 @@ public class Game extends JFrame implements Runnable
 		}
 	}
 
+	public void handleCTRL(boolean[] keys) 
+	{
+		if(keys[KeyEvent.VK_S])
+			map.saveMap();
+	}
+
+	public void leftClick(int x, int y)
+	{
+		x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
+		y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+		map.setTile(x, y, 2);
+	}
+
+	public void rightClick(int x, int y)
+	{
+		x = (int) Math.floor((x + renderer.getCamera().x)/(16.0 * xZoom));
+		y = (int) Math.floor((y + renderer.getCamera().y)/(16.0 * yZoom));
+		map.removeTile(x, y);
+	}
+
 
 	public void render() 
 	{
@@ -89,12 +142,16 @@ public class Game extends JFrame implements Runnable
 			Graphics graphics = bufferStrategy.getDrawGraphics();
 			super.paint(graphics);
 
-			renderer.renderSprite(testSprite, 0, 0, 5, 5);
-			renderer.renderRectangle(testRectangle, 1, 1);
+			map.render(renderer, xZoom, yZoom);
+
+			for(int i = 0; i < objects.length; i++) 
+				objects[i].render(renderer, xZoom, yZoom);
+
 			renderer.render(graphics);
 
 			graphics.dispose();
 			bufferStrategy.show();
+			renderer.clear();
 	}
 
 	public void run() 
@@ -130,4 +187,18 @@ public class Game extends JFrame implements Runnable
 		gameThread.start();
 	}
 
+	public KeyBoardListener getKeyListener() 
+	{
+		return keyListener;
+	}
+
+	public MouseEventListener getMouseListener() 
+	{
+		return mouseListener;
+	}
+
+	public RenderHandler getRenderer()
+	{
+		return renderer;
+	}
 }

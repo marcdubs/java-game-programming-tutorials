@@ -2,8 +2,8 @@ import java.awt.image.BufferedImage;
 
 public class Sprite
 {
-	private int width, height;
-	private int[] pixels;
+	protected int width, height;
+	protected int[] pixels;
 
 	public Sprite(SpriteSheet sheet, int startX, int startY, int width, int height) 
 	{
